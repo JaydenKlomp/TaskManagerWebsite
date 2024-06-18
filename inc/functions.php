@@ -36,7 +36,7 @@ function getAchievements() {
 
     $achievements = [];
     if ($result->num_rows > 0) {
-        while($row = $result->fetch_assoc()) {
+        while ($row = $result->fetch_assoc()) {
             $achievements[] = $row;
         }
     }
@@ -50,7 +50,7 @@ function exportAchievements() {
 
     $achievements = [];
     if ($result->num_rows > 0) {
-        while($row = $result->fetch_assoc()) {
+        while ($row = $result->fetch_assoc()) {
             $achievements[] = $row;
         }
     }
@@ -79,13 +79,25 @@ function importAchievements($file) {
         $content = file_get_contents($file['tmp_name']);
         $lines = explode("\n", $content);
 
-        $maxPosition = getMaxPosition();
+        // Step 1: Import the new achievements
+        $newPosition = 1;
         foreach ($lines as $line) {
             if (trim($line) != '') {
-                list($title, $description, $state, $position) = explode('|', $line);
-                $position = ++$maxPosition; // Ensure new positions are assigned
-                addAchievementWithState(trim($title), trim($description), trim($state), $position);
+                list($title, $description, $state) = explode('|', $line); // Removed $position from list
+                addAchievementWithState(trim($title), trim($description), trim($state), $newPosition++);
             }
+        }
+
+        // Step 2: Get the current max position after imports
+        $currentMaxPosition = $newPosition - 1;
+
+        // Step 3: Reassign positions to existing achievements starting after the max position
+        $sql = "SELECT * FROM achievements WHERE position >= $newPosition ORDER BY position ASC";
+        $result = $conn->query($sql);
+        while ($row = $result->fetch_assoc()) {
+            $updatePosition = ++$currentMaxPosition;
+            $updateSql = "UPDATE achievements SET position=$updatePosition WHERE id=" . $row['id'];
+            $conn->query($updateSql);
         }
     }
 }

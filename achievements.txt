@@ -1,8 +1,2 @@
-7||not_done|0
-0||done|1
-1||not_done|2
-2||default|3
-3||done|4
-4||not_done|5
-5||default|6
-6||done|7
+1||default|1
+2||default|2

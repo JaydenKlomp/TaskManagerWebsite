@@ -101,8 +101,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     displayAchievements();
 
-    exportAchievementsBtn.addEventListener('click', () => {
-        window.location.href = 'index.php?export=true';
+    exportAchievementsBtn.addEventListener('click', (e) => {
+        e.preventDefault();  // Prevent the default action to allow the confirmation
+        if (confirm("Are you sure you want to export the achievements?")) {
+            window.location.href = 'index.php?export=true';
+        }
     });
 
     importFile.addEventListener('change', () => {
