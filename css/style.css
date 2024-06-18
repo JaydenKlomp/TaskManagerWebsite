@@ -1,0 +1,93 @@
+body {
+    font-family: Arial, sans-serif;
+}
+
+.container {
+    width: 80%;
+    margin: auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    box-shadow: 2px 2px 12px #aaa;
+}
+
+.controls-container {
+    width: 80%;
+    margin: 20px auto;
+    padding: 20px;
+    border: 1px solid #ccc;
+    box-shadow: 2px 2px 12px #aaa;
+    background-color: #f9f9f9;
+    text-align: center;
+}
+
+#achievementForm {
+    margin-top: 20px;
+}
+
+#achievementForm input, #achievementForm textarea {
+    display: block;
+    width: 80%;
+    margin: 10px auto;
+    padding: 10px;
+    border: 1px solid #ccc;
+}
+
+#achievementsList {
+    margin-top: 20px;
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 20px;
+}
+
+.achievement {
+    border: 1px solid #ccc;
+    padding: 10px;
+    box-shadow: 1px 1px 6px #aaa;
+    background-color: #fff;
+    cursor: pointer;
+}
+
+button {
+    padding: 10px 20px;
+    margin: 10px;
+    border: 1px solid #ccc;
+    background-color: #f0f0f0;
+    cursor: pointer;
+}
+
+button:hover {
+    background-color: #e0e0e0;
+}
+
+#fileInputContainer {
+    display: inline-block;
+    position: relative;
+    margin-top: 10px;
+}
+
+#fileInputContainer input[type="file"] {
+    display: none;
+}
+
+#fileInputContainer label {
+    padding: 10px 20px;
+    border: 1px solid #ccc;
+    background-color: #f0f0f0;
+    cursor: pointer;
+}
+
+#fileInputContainer label:hover {
+    background-color: #e0e0e0;
+}
+
+.default {
+    background-color: #fff;
+}
+
+.done {
+    background-color: #d4edda;
+}
+
+.not_done {
+    background-color: #f8d7da;
+}
