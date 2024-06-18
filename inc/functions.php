@@ -15,18 +15,18 @@ if ($conn->connect_error) {
 function addAchievement($title, $description) {
     global $conn;
     $position = getMaxPosition() + 1;
-    $sql = "INSERT INTO achievements (title, description, position) VALUES ('$title', '$description', $position)";
-    if ($conn->query($sql) === TRUE) {
-        return "New achievement created successfully";
-    } else {
-        return "Error: " . $sql . "<br>" . $conn->error;
-    }
+    $stmt = $conn->prepare("INSERT INTO achievements (title, description, position, created_at) VALUES (?, ?, ?, NOW())");
+    $stmt->bind_param("ssi", $title, $description, $position);
+    $stmt->execute();
+    $stmt->close();
 }
 
 function addAchievementWithState($title, $description, $state, $position) {
     global $conn;
-    $sql = "INSERT INTO achievements (title, description, state, position) VALUES ('$title', '$description', '$state', $position)";
-    $conn->query($sql);
+    $stmt = $conn->prepare("INSERT INTO achievements (title, description, state, position, created_at) VALUES (?, ?, ?, ?, NOW())");
+    $stmt->bind_param("sssi", $title, $description, $state, $position);
+    $stmt->execute();
+    $stmt->close();
 }
 
 function getAchievements() {
@@ -108,6 +108,12 @@ function deleteAllAchievements() {
     $conn->query($sql);
 }
 
+function deleteAchievement($id) {
+    global $conn;
+    $sql = "DELETE FROM achievements WHERE id=$id";
+    $conn->query($sql);
+}
+
 function updateAchievementState($id, $state) {
     global $conn;
     $sql = "UPDATE achievements SET state='$state' WHERE id=$id";
@@ -144,6 +150,27 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['order'])) {
     $order = json_decode($_POST['order'], true);
     updateAchievementsOrder($order);
     echo "Order updated.";
+    exit;
+}
+
+// Handle delete achievement request
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['delete']) && isset($_POST['id'])) {
+    $id = $_POST['id'];
+    deleteAchievement($id);
+    echo "Achievement deleted.";
+    exit;
+}
+
+// Handle edit achievement request
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['edit']) && isset($_POST['id']) && isset($_POST['title']) && isset($_POST['description'])) {
+    $id = $_POST['id'];
+    $title = $_POST['title'];
+    $description = $_POST['description'];
+    $stmt = $conn->prepare("UPDATE achievements SET title = ?, description = ? WHERE id = ?");
+    $stmt->bind_param("ssi", $title, $description, $id);
+    $stmt->execute();
+    $stmt->close();
+    echo "Achievement updated.";
     exit;
 }
 ?>

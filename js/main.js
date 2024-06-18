@@ -8,6 +8,19 @@ document.addEventListener('DOMContentLoaded', () => {
     const fileName = document.getElementById('fileName');
     const importAchievementsBtn = document.getElementById('importAchievementsBtn');
     const counter = document.getElementById('counter');
+    const toggleModeBtn = document.getElementById('toggleModeBtn');
+    const sortTitleAZBtn = document.getElementById('sortTitleAZBtn');
+    const sortTitleZABtn = document.getElementById('sortTitleZABtn');
+    const sortDateOldestBtn = document.getElementById('sortDateOldestBtn');
+    const sortDateNewestBtn = document.getElementById('sortDateNewestBtn');
+
+    let isDay = true;
+
+    toggleModeBtn.addEventListener('click', () => {
+        document.body.classList.toggle('day', isDay);
+        document.body.classList.toggle('night', !isDay);
+        isDay = !isDay;
+    });
 
     addAchievementBtn.addEventListener('click', () => {
         achievementForm.style.display = 'block';
@@ -30,6 +43,63 @@ document.addEventListener('DOMContentLoaded', () => {
             location.reload();
         });
     });
+
+    const deleteAchievement = (id) => {
+        if (confirm('Are you sure you want to delete this achievement?')) {
+            fetch('inc/functions.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `delete=true&id=${id}`
+            })
+            .then(response => response.text())
+            .then(data => {
+                console.log(data);
+                location.reload();
+            });
+        }
+    };
+
+    const editAchievement = (id, currentTitle, currentDescription) => {
+        // Create the edit form dynamically
+        const editForm = document.createElement('div');
+        editForm.innerHTML = `
+            <div class="edit-form">
+                <h2>Edit Achievement</h2>
+                <label for="editTitle">Title:</label>
+                <input type="text" id="editTitle" value="${currentTitle}">
+                <label for="editDescription">Description:</label>
+                <textarea id="editDescription">${currentDescription}</textarea>
+                <button id="saveEditBtn">Save</button>
+                <button id="cancelEditBtn">Cancel</button>
+            </div>
+        `;
+        document.body.appendChild(editForm);
+
+        // Add event listeners for save and cancel buttons
+        document.getElementById('saveEditBtn').addEventListener('click', () => {
+            const newTitle = document.getElementById('editTitle').value;
+            const newDescription = document.getElementById('editDescription').value;
+
+            fetch('inc/functions.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `edit=true&id=${id}&title=${encodeURIComponent(newTitle)}&description=${encodeURIComponent(newDescription)}`
+            })
+            .then(response => response.text())
+            .then(data => {
+                console.log(data);
+                location.reload();
+            });
+        });
+
+        document.getElementById('cancelEditBtn').addEventListener('click', () => {
+            document.body.removeChild(editForm);
+        });
+    };
 
     const toggleAchievementState = (id, currentState) => {
         let newState;
@@ -66,15 +136,34 @@ document.addEventListener('DOMContentLoaded', () => {
         exportAchievementsBtn.disabled = total === 0;
     };
 
-    const displayAchievements = () => {
+    const displayAchievements = (sortedAchievements) => {
         achievementsList.innerHTML = '';
-        achievements.forEach(achievement => {
+        sortedAchievements.forEach(achievement => {
             const achievementDiv = document.createElement('div');
             achievementDiv.className = 'achievement';
             achievementDiv.classList.add(achievement.state);
             achievementDiv.dataset.id = achievement.id;
-            achievementDiv.innerHTML = `<h2>${achievement.title}</h2><p>${achievement.description}</p>`;
+            achievementDiv.innerHTML = `
+                <h2>${achievement.title}</h2>
+                <p>${achievement.description}</p>
+                <i class="fas fa-edit edit-icon"></i>
+                <i class="fas fa-trash delete-icon"></i>
+            `;
+
             achievementDiv.addEventListener('click', () => toggleAchievementState(achievement.id, achievement.state));
+
+            const editIcon = achievementDiv.querySelector('.edit-icon');
+            editIcon.addEventListener('click', (e) => {
+                e.stopPropagation();  // Prevent the click event from propagating to the achievement card
+                editAchievement(achievement.id, achievement.title, achievement.description);
+            });
+
+            const deleteIcon = achievementDiv.querySelector('.delete-icon');
+            deleteIcon.addEventListener('click', (e) => {
+                e.stopPropagation();  // Prevent the click event from propagating to the achievement card
+                deleteAchievement(achievement.id);
+            });
+
             achievementsList.appendChild(achievementDiv);
         });
         updateCounter();
@@ -99,7 +188,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    displayAchievements();
+    displayAchievements(achievements);
 
     exportAchievementsBtn.addEventListener('click', (e) => {
         e.preventDefault();  // Prevent the default action to allow the confirmation
@@ -117,6 +206,26 @@ document.addEventListener('DOMContentLoaded', () => {
             fileName.textContent = '';
             importAchievementsBtn.disabled = true;
         }
+    });
+
+    sortTitleAZBtn.addEventListener('click', () => {
+        const sortedAchievements = [...achievements].sort((a, b) => a.title.localeCompare(b.title));
+        displayAchievements(sortedAchievements);
+    });
+
+    sortTitleZABtn.addEventListener('click', () => {
+        const sortedAchievements = [...achievements].sort((a, b) => b.title.localeCompare(a.title));
+        displayAchievements(sortedAchievements);
+    });
+
+    sortDateOldestBtn.addEventListener('click', () => {
+        const sortedAchievements = [...achievements].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+        displayAchievements(sortedAchievements);
+    });
+
+    sortDateNewestBtn.addEventListener('click', () => {
+        const sortedAchievements = [...achievements].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        displayAchievements(sortedAchievements);
     });
 });
 

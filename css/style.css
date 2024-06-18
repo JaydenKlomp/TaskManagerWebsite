@@ -1,22 +1,28 @@
 body {
     font-family: Arial, sans-serif;
+    transition: background 0.5s, color 0.5s;
 }
 
-.container {
-    width: 80%;
-    margin: auto;
-    padding: 20px;
+body.day {
+    background: url('../img/day.webp') no-repeat center center fixed;
+    background-size: cover;
+}
+
+body.night {
+    background: url('../img/night.webp') no-repeat center center fixed;
+    background-size: cover;
+}
+
+.container, .controls-container {
+    background-color: rgba(255, 255, 255, 0.8);
     border: 1px solid #ccc;
     box-shadow: 2px 2px 12px #aaa;
+    margin: 20px auto;
+    padding: 20px;
+    width: 80%;
 }
 
 .controls-container {
-    width: 80%;
-    margin: 20px auto;
-    padding: 20px;
-    border: 1px solid #ccc;
-    box-shadow: 2px 2px 12px #aaa;
-    background-color: #f9f9f9;
     text-align: center;
 }
 
@@ -40,6 +46,7 @@ body {
 }
 
 .achievement {
+    position: relative;
     border: 1px solid #ccc;
     padding: 10px;
     box-shadow: 1px 1px 6px #aaa;
@@ -47,8 +54,33 @@ body {
     cursor: pointer;
 }
 
+.achievement .delete-icon, .achievement .edit-icon {
+    position: absolute;
+    top: 5px;
+    right: 25px;
+    color: red;
+    cursor: pointer;
+}
+
+.achievement .edit-icon {
+    right: 45px;
+    color: blue;
+}
+
 .achievement.dragging {
     opacity: 0.5;
+}
+
+.edit-form {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: #fff;
+    border: 1px solid #ccc;
+    padding: 20px;
+    box-shadow: 2px 2px 12px #aaa;
+    z-index: 1000;
 }
 
 button {

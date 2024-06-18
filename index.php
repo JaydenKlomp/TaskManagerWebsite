@@ -11,7 +11,6 @@ if (isset($_GET['export'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['importFile'])) {
-    deleteAllAchievements();
     importAchievements($_FILES['importFile']);
     header("Location: index.php");
     exit;
@@ -31,10 +30,12 @@ $achievements = getAchievements();
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
     <title>Achievement Manager</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
 </head>
-<body>
+<body class="day">
+    <button id="toggleModeBtn">Toggle Day/Night</button>
     <div class="container">
         <h1>Achievement Manager</h1>
         <div id="achievementsList">
@@ -52,7 +53,6 @@ $achievements = getAchievements();
             <button id="saveAchievementBtn">Add</button>
         </div>
         <button id="exportAchievementsBtn" disabled>Export Achievements</button>
-
         <form id="importForm" method="POST" enctype="multipart/form-data">
             <div id="fileInputContainer">
                 <input type="file" name="importFile" id="importFile" accept=".txt" required>
@@ -61,11 +61,14 @@ $achievements = getAchievements();
             </div>
             <button type="submit" id="importAchievementsBtn" disabled>Import Achievements</button>
         </form>
-
         <form id="deleteAllForm" method="POST" onsubmit="return confirmDelete();">
             <input type="hidden" name="deleteAll" value="true">
             <button type="submit">Delete All Achievements</button>
         </form>
+        <button id="sortTitleAZBtn">Sort Title (A-Z)</button>
+        <button id="sortTitleZABtn">Sort Title (Z-A)</button>
+        <button id="sortDateOldestBtn">Sort Date (Oldest to Newest)</button>
+        <button id="sortDateNewestBtn">Sort Date (Newest to Oldest)</button>
     </div>
     <script>
         const achievements = <?php echo json_encode($achievements); ?>;
@@ -73,3 +76,4 @@ $achievements = getAchievements();
     <script src="js/main.js"></script>
 </body>
 </html>
+
