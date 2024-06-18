@@ -47,6 +47,10 @@ body {
     cursor: pointer;
 }
 
+.achievement.dragging {
+    opacity: 0.5;
+}
+
 button {
     padding: 10px 20px;
     margin: 10px;
@@ -57,6 +61,11 @@ button {
 
 button:hover {
     background-color: #e0e0e0;
+}
+
+button:disabled {
+    background-color: #ccc;
+    cursor: not-allowed;
 }
 
 #fileInputContainer {
@@ -78,6 +87,13 @@ button:hover {
 
 #fileInputContainer label:hover {
     background-color: #e0e0e0;
+}
+
+#counter {
+    margin-top: 20px;
+    font-size: 18px;
+    font-weight: bold;
+    text-align: center;
 }
 
 .default {

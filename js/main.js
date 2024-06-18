@@ -6,6 +6,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const exportAchievementsBtn = document.getElementById('exportAchievementsBtn');
     const importFile = document.getElementById('importFile');
     const fileName = document.getElementById('fileName');
+    const importAchievementsBtn = document.getElementById('importAchievementsBtn');
+    const counter = document.getElementById('counter');
 
     addAchievementBtn.addEventListener('click', () => {
         achievementForm.style.display = 'block';
@@ -57,17 +59,45 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     };
 
+    const updateCounter = () => {
+        const total = achievements.length;
+        const doneCount = achievements.filter(a => a.state === 'done').length;
+        counter.textContent = `${doneCount}/${total} achievements done`;
+        exportAchievementsBtn.disabled = total === 0;
+    };
+
     const displayAchievements = () => {
         achievementsList.innerHTML = '';
         achievements.forEach(achievement => {
             const achievementDiv = document.createElement('div');
             achievementDiv.className = 'achievement';
             achievementDiv.classList.add(achievement.state);
+            achievementDiv.dataset.id = achievement.id;
             achievementDiv.innerHTML = `<h2>${achievement.title}</h2><p>${achievement.description}</p>`;
             achievementDiv.addEventListener('click', () => toggleAchievementState(achievement.id, achievement.state));
             achievementsList.appendChild(achievementDiv);
         });
+        updateCounter();
     };
+
+    const sortable = new Sortable(achievementsList, {
+        animation: 150,
+        onEnd: function (evt) {
+            const order = Array.from(achievementsList.children).map(child => child.dataset.id);
+
+            fetch('inc/functions.php', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/x-www-form-urlencoded',
+                },
+                body: `order=${JSON.stringify(order)}`
+            })
+            .then(response => response.text())
+            .then(data => {
+                console.log('Order updated:', data);
+            });
+        }
+    });
 
     displayAchievements();
 
@@ -79,8 +109,14 @@ document.addEventListener('DOMContentLoaded', () => {
         const file = importFile.files[0];
         if (file) {
             fileName.textContent = `Selected file: ${file.name}`;
+            importAchievementsBtn.disabled = false;
         } else {
             fileName.textContent = '';
+            importAchievementsBtn.disabled = true;
         }
     });
 });
+
+function confirmDelete() {
+    return confirm("Are you sure you want to delete all achievements? This action cannot be undone.");
+}

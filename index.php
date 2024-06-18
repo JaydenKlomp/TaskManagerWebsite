@@ -32,12 +32,16 @@ $achievements = getAchievements();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="stylesheet" href="css/style.css">
     <title>Achievement Manager</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Sortable/1.14.0/Sortable.min.js"></script>
 </head>
 <body>
     <div class="container">
         <h1>Achievement Manager</h1>
         <div id="achievementsList">
             <!-- Achievements will be loaded here -->
+        </div>
+        <div id="counter">
+            <!-- Counter will be updated here -->
         </div>
     </div>
     <div class="controls-container">
@@ -47,7 +51,7 @@ $achievements = getAchievements();
             <textarea id="description" placeholder="Description"></textarea>
             <button id="saveAchievementBtn">Add</button>
         </div>
-        <button id="exportAchievementsBtn">Export Achievements</button>
+        <button id="exportAchievementsBtn" disabled>Export Achievements</button>
 
         <form id="importForm" method="POST" enctype="multipart/form-data">
             <div id="fileInputContainer">
@@ -55,10 +59,10 @@ $achievements = getAchievements();
                 <label for="importFile">Choose File</label>
                 <span id="fileName"></span>
             </div>
-            <button type="submit">Import Achievements</button>
+            <button type="submit" id="importAchievementsBtn" disabled>Import Achievements</button>
         </form>
 
-        <form id="deleteAllForm" method="POST">
+        <form id="deleteAllForm" method="POST" onsubmit="return confirmDelete();">
             <input type="hidden" name="deleteAll" value="true">
             <button type="submit">Delete All Achievements</button>
         </form>

@@ -14,7 +14,8 @@ if ($conn->connect_error) {
 
 function addAchievement($title, $description) {
     global $conn;
-    $sql = "INSERT INTO achievements (title, description) VALUES ('$title', '$description')";
+    $position = getMaxPosition() + 1;
+    $sql = "INSERT INTO achievements (title, description, position) VALUES ('$title', '$description', $position)";
     if ($conn->query($sql) === TRUE) {
         return "New achievement created successfully";
     } else {
@@ -22,15 +23,15 @@ function addAchievement($title, $description) {
     }
 }
 
-function addAchievementWithState($title, $description, $state) {
+function addAchievementWithState($title, $description, $state, $position) {
     global $conn;
-    $sql = "INSERT INTO achievements (title, description, state) VALUES ('$title', '$description', '$state')";
+    $sql = "INSERT INTO achievements (title, description, state, position) VALUES ('$title', '$description', '$state', $position)";
     $conn->query($sql);
 }
 
 function getAchievements() {
     global $conn;
-    $sql = "SELECT * FROM achievements ORDER BY created_at DESC";
+    $sql = "SELECT * FROM achievements ORDER BY position ASC";
     $result = $conn->query($sql);
 
     $achievements = [];
@@ -44,7 +45,7 @@ function getAchievements() {
 
 function exportAchievements() {
     global $conn;
-    $sql = "SELECT * FROM achievements";
+    $sql = "SELECT * FROM achievements ORDER BY position ASC";
     $result = $conn->query($sql);
 
     $achievements = [];
@@ -56,7 +57,7 @@ function exportAchievements() {
 
     $file = fopen('achievements.txt', 'w');
     foreach ($achievements as $achievement) {
-        fwrite($file, $achievement['title'] . '|' . $achievement['description'] . '|' . $achievement['state'] . "\n");
+        fwrite($file, $achievement['title'] . '|' . $achievement['description'] . '|' . $achievement['state'] . '|' . $achievement['position'] . "\n");
     }
     fclose($file);
 
@@ -78,10 +79,12 @@ function importAchievements($file) {
         $content = file_get_contents($file['tmp_name']);
         $lines = explode("\n", $content);
 
+        $maxPosition = getMaxPosition();
         foreach ($lines as $line) {
             if (trim($line) != '') {
-                list($title, $description, $state) = explode('|', $line);
-                addAchievementWithState(trim($title), trim($description), trim($state));
+                list($title, $description, $state, $position) = explode('|', $line);
+                $position = ++$maxPosition; // Ensure new positions are assigned
+                addAchievementWithState(trim($title), trim($description), trim($state), $position);
             }
         }
     }
@@ -99,12 +102,36 @@ function updateAchievementState($id, $state) {
     $conn->query($sql);
 }
 
+function updateAchievementsOrder($achievements) {
+    global $conn;
+    foreach ($achievements as $position => $id) {
+        $sql = "UPDATE achievements SET position=$position WHERE id=$id";
+        $conn->query($sql);
+    }
+}
+
+function getMaxPosition() {
+    global $conn;
+    $sql = "SELECT MAX(position) AS max_position FROM achievements";
+    $result = $conn->query($sql);
+    $row = $result->fetch_assoc();
+    return $row['max_position'];
+}
+
 // Handle state update request
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['id']) && isset($_POST['state'])) {
     $id = $_POST['id'];
     $state = $_POST['state'];
     updateAchievementState($id, $state);
     echo "Achievement state updated.";
+    exit;
+}
+
+// Handle order update request
+if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['order'])) {
+    $order = json_decode($_POST['order'], true);
+    updateAchievementsOrder($order);
+    echo "Order updated.";
     exit;
 }
 ?>
