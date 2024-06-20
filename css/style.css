@@ -14,16 +14,30 @@ body.night {
 }
 
 .container, .controls-container {
-    background-color: rgba(255, 255, 255, 0.8);
+    background-color: rgba(255, 255, 255, 0.9);
     border: 1px solid #ccc;
     box-shadow: 2px 2px 12px #aaa;
     margin: 20px auto;
     padding: 20px;
     width: 80%;
+    border-radius: 8px;
 }
 
 .controls-container {
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+    background-color: rgba(255, 255, 255, 0.9);
+    border-radius: 8px;
+    box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
+}
+
+.top-controls, .middle-controls, .bottom-controls {
+    display: flex;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin-bottom: 20px;
 }
 
 #achievementForm {
@@ -36,6 +50,8 @@ body.night {
     margin: 10px auto;
     padding: 10px;
     border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: inset 0px 1px 3px rgba(0, 0, 0, 0.1);
 }
 
 #achievementsList {
@@ -52,6 +68,7 @@ body.night {
     box-shadow: 1px 1px 6px #aaa;
     background-color: #fff;
     cursor: pointer;
+    border-radius: 8px;
 }
 
 .achievement .delete-icon, .achievement .edit-icon {
@@ -81,18 +98,23 @@ body.night {
     padding: 20px;
     box-shadow: 2px 2px 12px #aaa;
     z-index: 1000;
+    border-radius: 8px;
 }
 
 button {
     padding: 10px 20px;
     margin: 10px;
     border: 1px solid #ccc;
-    background-color: #f0f0f0;
+    background-color: #4CAF50;
+    color: white;
+    border-radius: 4px;
     cursor: pointer;
+    font-size: 16px;
+    transition: background-color 0.3s;
 }
 
 button:hover {
-    background-color: #e0e0e0;
+    background-color: #45a049;
 }
 
 button:disabled {
@@ -113,12 +135,15 @@ button:disabled {
 #fileInputContainer label {
     padding: 10px 20px;
     border: 1px solid #ccc;
-    background-color: #f0f0f0;
+    background-color: #4CAF50;
+    color: white;
+    border-radius: 4px;
     cursor: pointer;
+    transition: background-color 0.3s;
 }
 
 #fileInputContainer label:hover {
-    background-color: #e0e0e0;
+    background-color: #45a049;
 }
 
 #counter {
@@ -138,4 +163,14 @@ button:disabled {
 
 .not_done {
     background-color: #f8d7da;
+}
+
+#searchBar {
+    width: 80%;
+    padding: 10px;
+    margin: 10px auto;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    box-shadow: inset 0px 1px 3px rgba(0, 0, 0, 0.1);
+    font-size: 16px;
 }

@@ -52,6 +52,7 @@ $achievements = getAchievements();
             <textarea id="description" placeholder="Description"></textarea>
             <button id="saveAchievementBtn">Add</button>
         </div>
+        <input type="text" id="searchBar" placeholder="Search Achievements">
         <button id="exportAchievementsBtn" disabled>Export Achievements</button>
         <form id="importForm" method="POST" enctype="multipart/form-data">
             <div id="fileInputContainer">
@@ -76,4 +77,6 @@ $achievements = getAchievements();
     <script src="js/main.js"></script>
 </body>
 </html>
+
+
 

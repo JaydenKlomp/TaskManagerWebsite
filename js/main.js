@@ -13,6 +13,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const sortTitleZABtn = document.getElementById('sortTitleZABtn');
     const sortDateOldestBtn = document.getElementById('sortDateOldestBtn');
     const sortDateNewestBtn = document.getElementById('sortDateNewestBtn');
+    const searchBar = document.getElementById('searchBar');
 
     let isDay = true;
 
@@ -226,6 +227,15 @@ document.addEventListener('DOMContentLoaded', () => {
     sortDateNewestBtn.addEventListener('click', () => {
         const sortedAchievements = [...achievements].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
         displayAchievements(sortedAchievements);
+    });
+
+    searchBar.addEventListener('input', () => {
+        const query = searchBar.value.toLowerCase();
+        const filteredAchievements = achievements.filter(achievement => 
+            achievement.title.toLowerCase().includes(query) || 
+            achievement.description.toLowerCase().includes(query)
+        );
+        displayAchievements(filteredAchievements);
     });
 });
 
