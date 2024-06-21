@@ -1,22 +1,23 @@
 <?php
 include 'inc/functions.php';
+session_start();
 
-if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['username']) && isset($_POST['password']) && isset($_POST['email'])) {
+$message = '';
+
+if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     $username = $_POST['username'];
-    $password = password_hash($_POST['password'], PASSWORD_BCRYPT);
+    $password = $_POST['password'];
     $email = $_POST['email'];
-    $profile_picture = 'default.jpg';
-
-    if (isset($_FILES['profile_picture']) && $_FILES['profile_picture']['error'] == 0) {
-        $profile_picture = 'uploads/' . basename($_FILES['profile_picture']['name']);
-        move_uploaded_file($_FILES['profile_picture']['tmp_name'], $profile_picture);
-    }
+    $profile_picture = 'uploads/default_profile_picture.jpg'; // Assuming a default profile picture
 
     if (registerUser($username, $password, $email, $profile_picture)) {
-        header('Location: login.php');
-        exit;
+        $_SESSION['user_id'] = $conn->insert_id;
+        $_SESSION['username'] = $username;
+        $_SESSION['profile_picture'] = $profile_picture;
+        $message = 'Registration successful. Redirecting to home page...';
+        header('Refresh: 2; URL=index.php'); // Redirect after 2 seconds
     } else {
-        echo "Registration failed. Please try again.";
+        $message = 'Registration failed. Please try again.';
     }
 }
 ?>
@@ -24,21 +25,22 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['username']) && isset($
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="css/style.css">
     <title>Register</title>
 </head>
 <body>
-    <div class="container">
-        <h1>Register</h1>
-        <form action="register.php" method="post" enctype="multipart/form-data">
-            <input type="text" name="username" placeholder="Username" required>
-            <input type="password" name="password" placeholder="Password" required>
-            <input type="email" name="email" placeholder="Email" required>
-            <input type="file" name="profile_picture" accept="image/*">
-            <button type="submit">Register</button>
-        </form>
-        <a href="login.php">Already have an account? Login here.</a>
-    </div>
+    <h1>Register</h1>
+    <?php if ($message): ?>
+        <p><?php echo htmlspecialchars($message); ?></p>
+    <?php endif; ?>
+    <form method="post">
+        <label for="username">Username:</label>
+        <input type="text" id="username" name="username" required>
+        <label for="password">Password:</label>
+        <input type="password" id="password" name="password" required>
+        <label for="email">Email:</label>
+        <input type="email" id="email" name="email" required>
+        <button type="submit">Register</button>
+    </form>
+    <p>Already have an account? <a href="login.php">Login here</a>.</p>
 </body>
 </html>

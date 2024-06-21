@@ -17,55 +17,30 @@ function registerUser($username, $password, $email, $profile_picture) {
     $sql = "INSERT INTO users (username, password, email, profile_picture) VALUES (?, ?, ?, ?)";
     $stmt = $conn->prepare($sql);
     $stmt->bind_param('ssss', $username, $password, $email, $profile_picture);
-    $stmt->execute();
-    $userId = $stmt->insert_id;
-    $stmt->close();
-
-    // Transfer temporary achievements to the new user
-    if (isset($_SESSION['temp_achievements'])) {
-        transferAchievementsToUser($userId, $_SESSION['temp_achievements']);
-        unset($_SESSION['temp_achievements']);
-    }
-
-    return $userId;
+    return $stmt->execute();
 }
 
 function loginUser($username, $password) {
     global $conn;
-    $sql = "SELECT * FROM users WHERE username = ?";
+    $sql = "SELECT * FROM users WHERE username = ? AND password = ?";
     $stmt = $conn->prepare($sql);
-    $stmt->bind_param('s', $username);
+    $stmt->bind_param('ss', $username, $password);
     $stmt->execute();
     $result = $stmt->get_result();
     $user = $result->fetch_assoc();
 
-    if ($user && password_verify($password, $user['password'])) {
-        // Transfer temporary achievements to the logged-in user
-        if (isset($_SESSION['temp_achievements'])) {
-            transferAchievementsToUser($user['id'], $_SESSION['temp_achievements']);
-            unset($_SESSION['temp_achievements']);
-        }
+    if ($user) {
         return $user;
     } else {
         return false;
     }
 }
 
-function transferAchievementsToUser($userId, $tempAchievements) {
+function addAchievement($user_id, $title, $description) {
     global $conn;
-    foreach ($tempAchievements as $achievement) {
-        $stmt = $conn->prepare("UPDATE achievements SET user_id = ? WHERE id = ?");
-        $stmt->bind_param("ii", $userId, $achievement['id']);
-        $stmt->execute();
-        $stmt->close();
-    }
-}
-
-function addAchievement($userId, $title, $description) {
-    global $conn;
-    $position = getMaxPosition($userId) + 1;
+    $position = getMaxPosition($user_id) + 1;
     $stmt = $conn->prepare("INSERT INTO achievements (user_id, title, description, position, created_at) VALUES (?, ?, ?, ?, NOW())");
-    $stmt->bind_param("issi", $userId, $title, $description, $position);
+    $stmt->bind_param("issi", $user_id, $title, $description, $position);
     $stmt->execute();
     $stmt->close();
 }
@@ -78,10 +53,10 @@ function addAchievementWithState($user_id, $title, $description, $state, $positi
     $stmt->close();
 }
 
-function getAchievementsByUser($userId) {
+function getAchievementsByUser($user_id) {
     global $conn;
     $stmt = $conn->prepare("SELECT * FROM achievements WHERE user_id = ? ORDER BY position ASC");
-    $stmt->bind_param("i", $userId);
+    $stmt->bind_param("i", $user_id);
     $stmt->execute();
     $result = $stmt->get_result();
 
@@ -93,12 +68,10 @@ function getAchievementsByUser($userId) {
     return $achievements;
 }
 
-
 function exportAchievements($user_id) {
     global $conn;
-    $sql = "SELECT * FROM achievements WHERE user_id = ? ORDER BY position ASC";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param('i', $user_id);
+    $stmt = $conn->prepare("SELECT * FROM achievements WHERE user_id = ? ORDER BY position ASC");
+    $stmt->bind_param("i", $user_id);
     $stmt->execute();
     $result = $stmt->get_result();
 
@@ -106,6 +79,7 @@ function exportAchievements($user_id) {
     while ($row = $result->fetch_assoc()) {
         $achievements[] = $row;
     }
+    $stmt->close();
 
     $file = fopen('achievements.txt', 'w');
     foreach ($achievements as $achievement) {
@@ -124,7 +98,6 @@ function exportAchievements($user_id) {
     exit;
 }
 
-
 function importAchievements($user_id, $file) {
     global $conn;
 
@@ -132,69 +105,57 @@ function importAchievements($user_id, $file) {
         $content = file_get_contents($file['tmp_name']);
         $lines = explode("\n", $content);
 
-        // Step 1: Import the new achievements
-        $newPosition = getMaxPosition($user_id) + 1;
+        $position = getMaxPosition($user_id) + 1;
         foreach ($lines as $line) {
             if (trim($line) != '') {
-                list($title, $description, $state) = explode('|', $line); // Removed $position from list
-                addAchievementWithState($user_id, trim($title), trim($description), trim($state), $newPosition++);
+                list($title, $description, $state, $position) = explode('|', $line);
+                addAchievementWithState($user_id, trim($title), trim($description), trim($state), $position++);
             }
-        }
-
-        // Step 2: Get the current max position after imports
-        $currentMaxPosition = $newPosition - 1;
-
-        // Step 3: Reassign positions to existing achievements starting after the max position
-        $sql = "SELECT * FROM achievements WHERE user_id = ? AND position >= $newPosition ORDER BY position ASC";
-        $stmt = $conn->prepare($sql);
-        $stmt->bind_param('i', $user_id);
-        $stmt->execute();
-        $result = $stmt->get_result();
-
-        while ($row = $result->fetch_assoc()) {
-            $updatePosition = ++$currentMaxPosition;
-            $updateSql = "UPDATE achievements SET position=$updatePosition WHERE id=" . $row['id'];
-            $conn->query($updateSql);
         }
     }
 }
 
 function deleteAllAchievements($user_id) {
     global $conn;
-    $sql = "DELETE FROM achievements WHERE user_id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param('i', $user_id);
+    $stmt = $conn->prepare("DELETE FROM achievements WHERE user_id = ?");
+    $stmt->bind_param("i", $user_id);
     $stmt->execute();
+    $stmt->close();
 }
 
 function deleteAchievement($id) {
     global $conn;
-    $sql = "DELETE FROM achievements WHERE id=$id";
-    $conn->query($sql);
+    $stmt = $conn->prepare("DELETE FROM achievements WHERE id = ?");
+    $stmt->bind_param("i", $id);
+    $stmt->execute();
+    $stmt->close();
 }
 
 function updateAchievementState($id, $state) {
     global $conn;
-    $sql = "UPDATE achievements SET state='$state' WHERE id=$id";
-    $conn->query($sql);
+    $stmt = $conn->prepare("UPDATE achievements SET state = ? WHERE id = ?");
+    $stmt->bind_param("si", $state, $id);
+    $stmt->execute();
+    $stmt->close();
 }
 
 function updateAchievementsOrder($achievements) {
     global $conn;
     foreach ($achievements as $position => $id) {
-        $sql = "UPDATE achievements SET position=$position WHERE id=$id";
-        $conn->query($sql);
+        $stmt = $conn->prepare("UPDATE achievements SET position = ? WHERE id = ?");
+        $stmt->bind_param("ii", $position, $id);
+        $stmt->execute();
     }
 }
 
-function getMaxPosition($userId) {
+function getMaxPosition($user_id) {
     global $conn;
-    $sql = "SELECT MAX(position) AS max_position FROM achievements WHERE user_id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param("i", $userId);
+    $stmt = $conn->prepare("SELECT MAX(position) AS max_position FROM achievements WHERE user_id = ?");
+    $stmt->bind_param("i", $user_id);
     $stmt->execute();
     $result = $stmt->get_result();
     $row = $result->fetch_assoc();
+    $stmt->close();
     return $row['max_position'];
 }
 
@@ -238,19 +199,28 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['edit']) && isset($_POS
 
 function getUserById($user_id) {
     global $conn;
-    $sql = "SELECT * FROM users WHERE id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param('i', $user_id);
+    $stmt = $conn->prepare("SELECT * FROM users WHERE id = ?");
+    $stmt->bind_param("i", $user_id);
     $stmt->execute();
     $result = $stmt->get_result();
-    return $result->fetch_assoc();
+    $user = $result->fetch_assoc();
+    $stmt->close();
+    return $user;
 }
 
-function updateUser($user_id, $username, $email, $profile_picture) {
+function updateUser($user_id, $username, $email, $profile_picture, $new_password = null) {
     global $conn;
-    $sql = "UPDATE users SET username = ?, email = ?, profile_picture = ? WHERE id = ?";
-    $stmt = $conn->prepare($sql);
-    $stmt->bind_param('sssi', $username, $email, $profile_picture, $user_id);
-    $stmt->execute();
+    $stmt = $conn->prepare("UPDATE users SET username = ?, email = ?, profile_picture = ? WHERE id = ?");
+    $stmt->bind_param("sssi", $username, $email, $profile_picture, $user_id);
+    $result = $stmt->execute();
     $stmt->close();
+
+    if ($new_password) {
+        $stmt = $conn->prepare("UPDATE users SET password = ? WHERE id = ?");
+        $stmt->bind_param("si", $new_password, $user_id);
+        $result = $result && $stmt->execute();
+        $stmt->close();
+    }
+
+    return $result;
 }

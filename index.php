@@ -2,18 +2,16 @@
 include 'inc/functions.php';
 session_start();
 
+if (!isset($_SESSION['user_id'])) {
+    header('Location: login.php');
+    exit;
+}
+
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['title']) && isset($_POST['description'])) {
-    $userId = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 0; // 0 for temporary achievements
+    $userId = $_SESSION['user_id'];
     $title = $_POST['title'];
     $description = $_POST['description'];
     addAchievement($userId, $title, $description);
-    if ($userId == 0) {
-        // Store the temporary achievement ID in session
-        $_SESSION['temp_achievements'][] = [
-            'title' => $title,
-            'description' => $description,
-        ];
-    }
     exit;
 }
 
@@ -24,9 +22,8 @@ if (isset($_GET['export'])) {
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['importFile'])) {
-    if (isset($_SESSION['user_id'])) {
-        importAchievements($_SESSION['user_id'], $_FILES['importFile']);
-    }
+    $userId = $_SESSION['user_id'];
+    importAchievements($userId, $_FILES['importFile']);
     header("Location: index.php");
     exit;
 }
@@ -48,8 +45,6 @@ if (isset($_POST['logout'])) {
 $achievements = [];
 if (isset($_SESSION['user_id'])) {
     $achievements = getAchievementsByUser($_SESSION['user_id']);
-} elseif (isset($_SESSION['temp_achievements'])) {
-    $achievements = $_SESSION['temp_achievements'];
 }
 ?>
 <!DOCTYPE html>
@@ -66,18 +61,14 @@ if (isset($_SESSION['user_id'])) {
     <button id="toggleModeBtn">Toggle Day/Night</button>
     <div class="container">
         <h1>Achievement Manager</h1>
-        <?php if (isset($_SESSION['user_id'])): ?>
-            <div class="user-info">
-                <img src="<?php echo $_SESSION['profile_picture']; ?>" alt="Profile Picture" class="profile-picture">
-                <p>Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?>!</p>
-                <form action="index.php" method="post">
-                    <button type="submit" name="logout">Logout</button>
-                </form>
-                <a href="settings.php">Edit Profile</a>
-            </div>
-        <?php else: ?>
-            <a href="login.php">Login</a> | <a href="register.php">Register</a>
-        <?php endif; ?>
+        <div class="user-info">
+            <img src="<?php echo htmlspecialchars($_SESSION['profile_picture'] ?? 'default_profile_picture.jpg'); ?>" alt="Profile Picture" class="profile-picture">
+            <p>Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?>!</p>
+            <form action="index.php" method="post">
+                <button type="submit" name="logout">Logout</button>
+            </form>
+            <a href="settings.php">Edit Profile</a>
+        </div>
         <input type="text" id="searchBar" placeholder="Search Achievements">
         <div id="achievementsList">
             <!-- Achievements will be loaded here -->
