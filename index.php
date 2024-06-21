@@ -1,32 +1,43 @@
 <?php
 include 'inc/functions.php';
+session_start();
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_POST['title']) && isset($_POST['description'])) {
-    echo addAchievement($_POST['title'], $_POST['description']);
+    $userId = isset($_SESSION['user_id']) ? $_SESSION['user_id'] : 0; // 0 for temporary achievements
+    $title = $_POST['title'];
+    $description = $_POST['description'];
+    addAchievement($userId, $title, $description);
+    if ($userId == 0) {
+        // Store the temporary achievement ID in session
+        $_SESSION['temp_achievements'][] = [
+            'title' => $title,
+            'description' => $description,
+        ];
+    }
     exit;
 }
 
 if (isset($_GET['export'])) {
-    exportAchievements();
+    if (isset($_SESSION['user_id'])) {
+        exportAchievements($_SESSION['user_id']);
+    }
 }
 
 if ($_SERVER['REQUEST_METHOD'] == 'POST' && isset($_FILES['importFile'])) {
-    importAchievements($_FILES['importFile']);
+    if (isset($_SESSION['user_id'])) {
+        importAchievements($_SESSION['user_id'], $_FILES['importFile']);
+    }
     header("Location: index.php");
     exit;
 }
 
 if (isset($_POST['deleteAll'])) {
-    deleteAllAchievements();
+    if (isset($_SESSION['user_id'])) {
+        deleteAllAchievements($_SESSION['user_id']);
+    }
     header("Location: index.php");
     exit;
 }
-
-$achievements = getAchievements();
-?>
-<?php
-include 'inc/functions.php';
-session_start();
 
 if (isset($_POST['logout'])) {
     session_destroy();
@@ -37,6 +48,8 @@ if (isset($_POST['logout'])) {
 $achievements = [];
 if (isset($_SESSION['user_id'])) {
     $achievements = getAchievementsByUser($_SESSION['user_id']);
+} elseif (isset($_SESSION['temp_achievements'])) {
+    $achievements = $_SESSION['temp_achievements'];
 }
 ?>
 <!DOCTYPE html>
@@ -56,7 +69,7 @@ if (isset($_SESSION['user_id'])) {
         <?php if (isset($_SESSION['user_id'])): ?>
             <div class="user-info">
                 <img src="<?php echo $_SESSION['profile_picture']; ?>" alt="Profile Picture" class="profile-picture">
-                <p>Welcome, <?php echo $_SESSION['username']; ?>!</p>
+                <p>Welcome, <?php echo htmlspecialchars($_SESSION['username']); ?>!</p>
                 <form action="index.php" method="post">
                     <button type="submit" name="logout">Logout</button>
                 </form>
@@ -74,7 +87,32 @@ if (isset($_SESSION['user_id'])) {
         </div>
     </div>
     <div class="controls-container">
-        <!-- Existing controls -->
+        <button id="addAchievementBtn">Add Achievement</button>
+        <div id="achievementForm" style="display: none;">
+            <input type="text" id="title" placeholder="Title">
+            <textarea id="description" placeholder="Description"></textarea>
+            <button id="saveAchievementBtn">Add</button>
+        </div>
+        <button id="exportAchievementsBtn" disabled>Export Achievements</button>
+        <form id="importForm" method="POST" enctype="multipart/form-data">
+            <div id="fileInputContainer">
+                <input type="file" name="importFile" id="importFile" accept=".txt" required>
+            </div>
+            <button type="submit" id="importAchievementsBtn" disabled>Import Achievements</button>
+            <label for="importFile">Choose File</label>
+            <span id="fileName"></span>
+        </form>
+        <form id="deleteAllForm" method="POST" onsubmit="return confirmDelete();">
+            <input type="hidden" name="deleteAll" value="true">
+            <button type="submit">Delete All Achievements</button>
+        </form>
+        <select id="sortOptions">
+            <option value="default">Default</option>
+            <option value="titleAZ">Sort Title (A-Z)</option>
+            <option value="titleZA">Sort Title (Z-A)</option>
+            <option value="dateOldest">Sort Date (Oldest to Newest)</option>
+            <option value="dateNewest">Sort Date (Newest to Oldest)</option>
+        </select>
     </div>
     <script>
         const achievements = <?php echo json_encode($achievements); ?>;
