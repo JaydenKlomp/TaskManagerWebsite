@@ -24,9 +24,10 @@ body.night {
 }
 
 .controls-container {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 20px;
+    justify-content: center;
     padding: 20px;
     background-color: rgba(255, 255, 255, 0.9);
     border-radius: 8px;
@@ -35,8 +36,8 @@ body.night {
 
 .top-controls, .middle-controls, .bottom-controls {
     display: flex;
-    justify-content: center;
-    flex-wrap: wrap;
+    flex-direction: column;
+    align-items: center;
     margin-bottom: 20px;
 }
 
@@ -123,8 +124,9 @@ button:disabled {
 }
 
 #fileInputContainer {
-    display: inline-block;
-    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
     margin-top: 10px;
 }
 
@@ -140,10 +142,17 @@ button:disabled {
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.3s;
+    margin-bottom: 10px;
 }
 
 #fileInputContainer label:hover {
     background-color: #45a049;
+}
+
+#fileName {
+    margin-top: 10px;
+    font-size: 14px;
+    color: #555;
 }
 
 #counter {
@@ -166,11 +175,42 @@ button:disabled {
 }
 
 #searchBar {
-    width: 80%;
     padding: 10px;
     margin: 10px auto;
     border: 1px solid #ccc;
     border-radius: 4px;
     box-shadow: inset 0px 1px 3px rgba(0, 0, 0, 0.1);
     font-size: 16px;
+    text-align: center;
+    align-content: center;
+    display: flex;
+    justify-content: center;
+}
+
+#sortOptions {
+    padding: 10px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #4CAF50;
+    color: white;
+    cursor: pointer;
+    font-size: 16px;
+    margin-top: 20px;
+}
+
+.profile-picture {
+    width: 50px;
+    height: 50px;
+    border-radius: 50%;
+    object-fit: cover;
+}
+
+.user-info {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.user-info p {
+    margin: 0;
 }

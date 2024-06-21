@@ -24,6 +24,21 @@ if (isset($_POST['deleteAll'])) {
 
 $achievements = getAchievements();
 ?>
+<?php
+include 'inc/functions.php';
+session_start();
+
+if (isset($_POST['logout'])) {
+    session_destroy();
+    header('Location: index.php');
+    exit;
+}
+
+$achievements = [];
+if (isset($_SESSION['user_id'])) {
+    $achievements = getAchievementsByUser($_SESSION['user_id']);
+}
+?>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -38,6 +53,19 @@ $achievements = getAchievements();
     <button id="toggleModeBtn">Toggle Day/Night</button>
     <div class="container">
         <h1>Achievement Manager</h1>
+        <?php if (isset($_SESSION['user_id'])): ?>
+            <div class="user-info">
+                <img src="<?php echo $_SESSION['profile_picture']; ?>" alt="Profile Picture" class="profile-picture">
+                <p>Welcome, <?php echo $_SESSION['username']; ?>!</p>
+                <form action="index.php" method="post">
+                    <button type="submit" name="logout">Logout</button>
+                </form>
+                <a href="settings.php">Edit Profile</a>
+            </div>
+        <?php else: ?>
+            <a href="login.php">Login</a> | <a href="register.php">Register</a>
+        <?php endif; ?>
+        <input type="text" id="searchBar" placeholder="Search Achievements">
         <div id="achievementsList">
             <!-- Achievements will be loaded here -->
         </div>
@@ -46,30 +74,7 @@ $achievements = getAchievements();
         </div>
     </div>
     <div class="controls-container">
-        <button id="addAchievementBtn">Add Achievement</button>
-        <div id="achievementForm" style="display: none;">
-            <input type="text" id="title" placeholder="Title">
-            <textarea id="description" placeholder="Description"></textarea>
-            <button id="saveAchievementBtn">Add</button>
-        </div>
-        <input type="text" id="searchBar" placeholder="Search Achievements">
-        <button id="exportAchievementsBtn" disabled>Export Achievements</button>
-        <form id="importForm" method="POST" enctype="multipart/form-data">
-            <div id="fileInputContainer">
-                <input type="file" name="importFile" id="importFile" accept=".txt" required>
-                <label for="importFile">Choose File</label>
-                <span id="fileName"></span>
-            </div>
-            <button type="submit" id="importAchievementsBtn" disabled>Import Achievements</button>
-        </form>
-        <form id="deleteAllForm" method="POST" onsubmit="return confirmDelete();">
-            <input type="hidden" name="deleteAll" value="true">
-            <button type="submit">Delete All Achievements</button>
-        </form>
-        <button id="sortTitleAZBtn">Sort Title (A-Z)</button>
-        <button id="sortTitleZABtn">Sort Title (Z-A)</button>
-        <button id="sortDateOldestBtn">Sort Date (Oldest to Newest)</button>
-        <button id="sortDateNewestBtn">Sort Date (Newest to Oldest)</button>
+        <!-- Existing controls -->
     </div>
     <script>
         const achievements = <?php echo json_encode($achievements); ?>;
@@ -77,6 +82,3 @@ $achievements = getAchievements();
     <script src="js/main.js"></script>
 </body>
 </html>
-
-
-

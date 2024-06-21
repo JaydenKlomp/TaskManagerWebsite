@@ -12,6 +12,32 @@ if ($conn->connect_error) {
     die("Connection failed: " . $conn->connect_error);
 }
 
+// Function declarations
+function registerUser($username, $password, $email, $profile_picture) {
+    global $conn;
+    $sql = "INSERT INTO users (username, password, email, profile_picture) VALUES (?, ?, ?, ?)";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param('ssss', $username, $password, $email, $profile_picture);
+    $stmt->execute();
+    return $stmt->affected_rows > 0;
+}
+
+function loginUser($username, $password) {
+    global $conn;
+    $sql = "SELECT * FROM users WHERE username = ?";
+    $stmt = $conn->prepare($sql);
+    $stmt->bind_param('s', $username);
+    $stmt->execute();
+    $result = $stmt->get_result();
+    $user = $result->fetch_assoc();
+
+    if ($user && password_verify($password, $user['password'])) {
+        return $user;
+    } else {
+        return false;
+    }
+}
+
 function addAchievement($title, $description) {
     global $conn;
     $position = getMaxPosition() + 1;

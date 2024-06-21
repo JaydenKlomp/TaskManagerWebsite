@@ -9,10 +9,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const importAchievementsBtn = document.getElementById('importAchievementsBtn');
     const counter = document.getElementById('counter');
     const toggleModeBtn = document.getElementById('toggleModeBtn');
-    const sortTitleAZBtn = document.getElementById('sortTitleAZBtn');
-    const sortTitleZABtn = document.getElementById('sortTitleZABtn');
-    const sortDateOldestBtn = document.getElementById('sortDateOldestBtn');
-    const sortDateNewestBtn = document.getElementById('sortDateNewestBtn');
+    const sortOptions = document.getElementById('sortOptions');
     const searchBar = document.getElementById('searchBar');
 
     let isDay = true;
@@ -63,7 +60,6 @@ document.addEventListener('DOMContentLoaded', () => {
     };
 
     const editAchievement = (id, currentTitle, currentDescription) => {
-        // Create the edit form dynamically
         const editForm = document.createElement('div');
         editForm.innerHTML = `
             <div class="edit-form">
@@ -78,7 +74,6 @@ document.addEventListener('DOMContentLoaded', () => {
         `;
         document.body.appendChild(editForm);
 
-        // Add event listeners for save and cancel buttons
         document.getElementById('saveEditBtn').addEventListener('click', () => {
             const newTitle = document.getElementById('editTitle').value;
             const newDescription = document.getElementById('editDescription').value;
@@ -155,13 +150,13 @@ document.addEventListener('DOMContentLoaded', () => {
 
             const editIcon = achievementDiv.querySelector('.edit-icon');
             editIcon.addEventListener('click', (e) => {
-                e.stopPropagation();  // Prevent the click event from propagating to the achievement card
+                e.stopPropagation();
                 editAchievement(achievement.id, achievement.title, achievement.description);
             });
 
             const deleteIcon = achievementDiv.querySelector('.delete-icon');
             deleteIcon.addEventListener('click', (e) => {
-                e.stopPropagation();  // Prevent the click event from propagating to the achievement card
+                e.stopPropagation();
                 deleteAchievement(achievement.id);
             });
 
@@ -192,7 +187,7 @@ document.addEventListener('DOMContentLoaded', () => {
     displayAchievements(achievements);
 
     exportAchievementsBtn.addEventListener('click', (e) => {
-        e.preventDefault();  // Prevent the default action to allow the confirmation
+        e.preventDefault();
         if (confirm("Are you sure you want to export the achievements?")) {
             window.location.href = 'index.php?export=true';
         }
@@ -209,23 +204,27 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    sortTitleAZBtn.addEventListener('click', () => {
-        const sortedAchievements = [...achievements].sort((a, b) => a.title.localeCompare(b.title));
-        displayAchievements(sortedAchievements);
-    });
+    sortOptions.addEventListener('change', () => {
+        const option = sortOptions.value;
+        let sortedAchievements;
 
-    sortTitleZABtn.addEventListener('click', () => {
-        const sortedAchievements = [...achievements].sort((a, b) => b.title.localeCompare(a.title));
-        displayAchievements(sortedAchievements);
-    });
-
-    sortDateOldestBtn.addEventListener('click', () => {
-        const sortedAchievements = [...achievements].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
-        displayAchievements(sortedAchievements);
-    });
-
-    sortDateNewestBtn.addEventListener('click', () => {
-        const sortedAchievements = [...achievements].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+        switch (option) {
+            case 'titleAZ':
+                sortedAchievements = [...achievements].sort((a, b) => a.title.localeCompare(b.title));
+                break;
+            case 'titleZA':
+                sortedAchievements = [...achievements].sort((a, b) => b.title.localeCompare(a.title));
+                break;
+            case 'dateOldest':
+                sortedAchievements = [...achievements].sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+                break;
+            case 'dateNewest':
+                sortedAchievements = [...achievements].sort((a, b) => new Date(b.created_at) - new Date(a.created_at));
+                break;
+            default:
+                sortedAchievements = achievements;
+                break;
+        }
         displayAchievements(sortedAchievements);
     });
 
